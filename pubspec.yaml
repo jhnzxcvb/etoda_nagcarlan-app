@@ -11,25 +11,33 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  # --- NETWORKING & API ---
+  # Used to connect to your Golang/PostgreSQL backend
+  http: ^1.1.0
 
-  # --- eTODA ESSENTIALS ---
+  # --- UI & STYLE ---
+  cupertino_icons: ^1.0.8
   # For professional Nagcarlan branding fonts
   google_fonts: ^8.0.2
 
-  # For Passenger side: Scanning Driver QR codes
+  # --- PASSENGER FEATURES ---
+  # For scanning Driver QR codes
   mobile_scanner: ^7.2.0
 
-  # For Driver side: Generating their unique ID QR code
+  # --- DRIVER FEATURES ---
+  # For generating unique Driver ID QR codes
   qr_flutter: ^4.1.0
 
-  # For Fair Treatment: Real-time location for digital queue & wayback trips
+  # --- REAL-TIME & QUEUE LOGIC ---
+  # For digital queueing and location-based fare verification
   geolocator: ^14.0.2
 
-  # For managing user roles (Passenger/Driver) and Trip status
+  # --- STATE MANAGEMENT ---
+  # For managing user roles (Passenger vs Driver) across the app
   provider: ^6.1.2
 
-  # For simple local data storage (saving trip history on device)
+  # --- LOCAL STORAGE ---
+  # To save login sessions or recent trip history offline
   shared_preferences: ^2.5.2
 
 dev_dependencies:
@@ -40,6 +48,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # If you have a Nagcarlan or TODA Logo, uncomment this section:
+  # Add assets here if you have a TODA or Nagcarlan logo
   # assets:
   #   - assets/logo.png

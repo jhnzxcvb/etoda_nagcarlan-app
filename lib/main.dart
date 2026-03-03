@@ -1,17 +1,22 @@
 
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // Added HTTP package
+
+// Screen Imports
 import 'package:etoda_nagcarlan/screens/fare_matrix_screen.dart';
 import 'package:etoda_nagcarlan/screens/passenger_edit_profile_screen.dart';
 import 'package:etoda_nagcarlan/screens/passenger_trip_details_screen.dart';
 import 'package:etoda_nagcarlan/screens/passenger_trip_history_screen.dart';
 import 'package:etoda_nagcarlan/screens/trip_ended_screen.dart';
 import 'package:etoda_nagcarlan/screens/trip_started_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:etoda_nagcarlan/screens/landing_screen.dart';
 import 'package:etoda_nagcarlan/screens/passenger_home.dart';
 import 'package:etoda_nagcarlan/screens/driver_home.dart';
 import 'package:etoda_nagcarlan/screens/driver_profile.dart';
 import 'package:etoda_nagcarlan/screens/scan_qr_screen.dart';
 import 'package:etoda_nagcarlan/screens/scanned_driver_profile_screen.dart';
+import 'package:etoda_nagcarlan/screens/login_screen.dart';
+import 'package:etoda_nagcarlan/screens/signup_screen.dart';
 
 // --- GLOBAL BRANDING & CONSTANTS ---
 const Color nagcarlanGreen = Color(0xFF1B5E20);
@@ -25,7 +30,31 @@ const nagcarlanGradient = BoxDecoration(
   ),
 );
 
+// --- CONNECTION TEST FUNCTION ---
+// This will print the status to your Debug Console in Android Studio
+Future<void> testConnection() async {
+  try {
+    // 10.0.2.2 is the alias for your computer's localhost in the Android Emulator
+    final response = await http.get(Uri.parse('http://10.0.2.2:8080/driver'));
+
+    if (response.statusCode == 200) {
+      print("✅ SUCCESS: Connected to Go Backend!");
+      print("Data from Database: \${response.body}");
+    } else {
+      print("❌ ERROR: Server responded with \${response.statusCode}");
+    }
+  } catch (e) {
+    print("❌ CONNECTION FAILED: \$e");
+    print("💡 Tip: Ensure your Go server is running and you're using the Android Emulator.");
+  }
+}
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Trigger the test connection right when the app starts
+  testConnection();
+
   runApp(const EtodaApp());
 }
 
@@ -47,10 +76,11 @@ class EtodaApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      // Define Routes for easy navigation
       initialRoute: '/',
       routes: {
         '/': (context) => const LandingScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
         '/passenger_home': (context) => const PassengerHomeScreen(),
         '/driver_home': (context) => const DriverHomeScreen(),
         '/driver_profile': (context) => const DriverProfileScreen(),
