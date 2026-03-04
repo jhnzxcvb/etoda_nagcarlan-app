@@ -13,10 +13,12 @@ import 'package:etoda_nagcarlan/screens/landing_screen.dart';
 import 'package:etoda_nagcarlan/screens/passenger_home.dart';
 import 'package:etoda_nagcarlan/screens/driver_home.dart';
 import 'package:etoda_nagcarlan/screens/driver_profile.dart';
+import 'package:etoda_nagcarlan/screens/driver_edit_profile_screen.dart';
 import 'package:etoda_nagcarlan/screens/scan_qr_screen.dart';
 import 'package:etoda_nagcarlan/screens/scanned_driver_profile_screen.dart';
 import 'package:etoda_nagcarlan/screens/login_screen.dart';
 import 'package:etoda_nagcarlan/screens/signup_screen.dart';
+import 'package:etoda_nagcarlan/screens/forgot_password_screen.dart';
 
 // --- GLOBAL BRANDING & CONSTANTS ---
 const Color nagcarlanGreen = Color(0xFF1B5E20);
@@ -38,14 +40,14 @@ Future<void> testConnection() async {
     final response = await http.get(Uri.parse('http://10.0.2.2:8080/driver'));
 
     if (response.statusCode == 200) {
-      print("✅ SUCCESS: Connected to Go Backend!");
-      print("Data from Database: \${response.body}");
+      debugPrint("✅ SUCCESS: Connected to Go Backend!");
+      debugPrint("Data from Database: \${response.body}");
     } else {
-      print("❌ ERROR: Server responded with \${response.statusCode}");
+      debugPrint("❌ ERROR: Server responded with \${response.statusCode}");
     }
   } catch (e) {
-    print("❌ CONNECTION FAILED: \$e");
-    print("💡 Tip: Ensure your Go server is running and you're using the Android Emulator.");
+    debugPrint("❌ CONNECTION FAILED: \$e");
+    debugPrint("💡 Tip: Ensure your Go server is running and you're using the Android Emulator.");
   }
 }
 
@@ -84,6 +86,7 @@ class EtodaApp extends StatelessWidget {
         '/passenger_home': (context) => const PassengerHomeScreen(),
         '/driver_home': (context) => const DriverHomeScreen(),
         '/driver_profile': (context) => const DriverProfileScreen(),
+        '/driver_edit_profile': (context) => const DriverEditProfileScreen(),
         '/scan_qr': (context) => const ScanQRScreen(),
         '/driver_profile_scanned': (context) => const ScannedDriverProfileScreen(),
         '/trip_started': (context) => const TripStartedScreen(),
@@ -92,6 +95,7 @@ class EtodaApp extends StatelessWidget {
         '/passenger_edit_profile': (context) => const PassengerEditProfileScreen(),
         '/passenger_trip_history': (context) => const PassengerTripHistoryScreen(),
         '/passenger_trip_details': (context) => const PassengerTripDetailsScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
       },
     );
   }

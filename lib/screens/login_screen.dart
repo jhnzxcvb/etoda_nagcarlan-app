@@ -84,11 +84,11 @@ class _LoginScreenState extends State<LoginScreen> {
         String role = data['role'] ?? 'passenger';
 
         if (role == 'driver') {
-          // Navigate to Driver Dashboard
-          Navigator.pushReplacementNamed(context, '/driver_home');
+          // Navigate to Driver Dashboard and pass the driver data (Map)
+          Navigator.pushReplacementNamed(context, '/driver_home', arguments: data);
         } else {
-          // Navigate to Passenger Dashboard
-          Navigator.pushReplacementNamed(context, '/passenger_home');
+          // Navigate to Passenger Dashboard and pass the passenger data (Map)
+          Navigator.pushReplacementNamed(context, '/passenger_home', arguments: data);
         }
       } else if (response.statusCode == 401) {
         _showNotificationDialog(
@@ -196,7 +196,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (v) => v!.isEmpty ? "Please enter your password" : null,
                   ),
 
-                  const SizedBox(height: 30),
+                  // Forgot Password Link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/forgot_password'),
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(color: nagcarlanGreen, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
 
                   // Login Button
                   _isLoading
