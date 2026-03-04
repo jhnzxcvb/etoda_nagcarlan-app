@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:etoda_nagcarlan/main.dart';
 
 class PassengerProfileMenu extends StatelessWidget {
-  const PassengerProfileMenu({super.key});
+  final Map<String, dynamic>? passengerData;
+
+  const PassengerProfileMenu({super.key, this.passengerData});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +13,7 @@ class PassengerProfileMenu extends StatelessWidget {
       onSelected: (value) {
         switch (value) {
           case 'edit_profile':
-            Navigator.pushNamed(context, '/passenger_edit_profile');
+            Navigator.pushNamed(context, '/passenger_edit_profile', arguments: passengerData);
             break;
           case 'trip_history':
             Navigator.pushNamed(context, '/passenger_trip_history');

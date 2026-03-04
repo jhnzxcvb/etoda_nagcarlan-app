@@ -10,16 +10,17 @@ class PassengerHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get passenger data from arguments passed during login
+    final Map<String, dynamic>? passengerData =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: nagcarlanGreen),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: const [
-          PassengerProfileMenu(),
+        automaticallyImplyLeading: false, // Prevents the default back button
+        actions: [
+          PassengerProfileMenu(passengerData: passengerData),
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -32,6 +33,13 @@ class PassengerHomeScreen extends StatelessWidget {
             const SizedBox(height: 80),
             const Text("eTODA", style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: nagcarlanGreen)),
             const Text("NAGCARLAN", style: TextStyle(fontSize: 16, letterSpacing: 3, fontWeight: FontWeight.bold, color: nagcarlanGreen)),
+            
+            // Welcome the passenger by name
+            Text(
+                "Welcome, ${passengerData?['first_name'] ?? 'Passenger'}",
+                style: const TextStyle(fontSize: 18, color: nagcarlanGreen, fontWeight: FontWeight.w500)
+            ),
+
             const Spacer(),
             MenuCard(
               title: "SCAN DRIVER QR",
@@ -98,7 +106,7 @@ class MenuCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-                    Text(subtitle, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.7))),
+                    Text(subtitle, style: TextStyle(fontSize: 12, color: textColor.withAlpha(178))),
                   ],
                 ),
               )

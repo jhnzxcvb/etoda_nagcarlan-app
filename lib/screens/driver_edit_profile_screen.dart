@@ -4,24 +4,23 @@ import 'package:etoda_nagcarlan/widgets/branding_footer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class PassengerEditProfileScreen extends StatefulWidget {
-  const PassengerEditProfileScreen({super.key});
+class DriverEditProfileScreen extends StatefulWidget {
+  const DriverEditProfileScreen({super.key});
 
   @override
-  State<PassengerEditProfileScreen> createState() => _PassengerEditProfileScreenState();
+  State<DriverEditProfileScreen> createState() => _DriverEditProfileScreenState();
 }
 
-class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen> {
+class _DriverEditProfileScreenState extends State<DriverEditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers for data gathering
+  // Revised controllers to match database fields
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _middleNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _plateController = TextEditingController();
 
-  // Password controllers
   final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -31,7 +30,8 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
-  int? _userId;
+
+  int? _driverId;
 
   @override
   void initState() {
@@ -49,23 +49,23 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_userId == null) {
+    if (_driverId == null) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      _userId = args?['user_id'];
+      _driverId = args?['driver_id'];
 
-      if (_userId != null) {
-        _fetchPassengerData();
+      if (_driverId != null) {
+        _fetchDriverData();
       } else {
         setState(() => _isLoading = false);
-        _showError("Session error: ID not found.");
+        _showError("Session expired. Please login again.");
       }
     }
   }
 
-  Future<void> _fetchPassengerData() async {
+  Future<void> _fetchDriverData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/profile?role=passenger&id=$_userId'),
+        Uri.parse('http://10.0.2.2:8080/profile?role=driver&id=$_driverId'),
       );
 
       if (response.statusCode == 200) {
@@ -75,15 +75,15 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
           _middleNameController.text = data['middle_name'] ?? '';
           _lastNameController.text = data['last_name'] ?? '';
           _contactController.text = data['phone_number'] ?? '';
-          _emailController.text = data['email'] ?? '';
+          _plateController.text = data['plate_number'] ?? '';
           _isLoading = false;
         });
       } else {
-        _showError("Failed to load profile.");
+        _showError("Could not retrieve driver data.");
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      _showError("Connection error.");
+      _showError("Connection error. Check your server.");
       setState(() => _isLoading = false);
     }
   }
@@ -91,23 +91,25 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validation: New password must not be the same as the current password
+    // Additional check: New password must not be the same as the old one
     if (_newPasswordController.text.isNotEmpty && _newPasswordController.text == _currentPasswordController.text) {
       _showError("New password cannot be the same as the current password.");
       return;
     }
 
     setState(() => _isSaving = true);
+
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/passenger/update-profile'),
+        Uri.parse('http://10.0.2.2:8080/driver/update-profile'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'user_id': _userId,
+          'driver_id': _driverId,
           'first_name': _firstNameController.text.trim(),
           'middle_name': _middleNameController.text.trim(),
           'last_name': _lastNameController.text.trim(),
           'phone_number': _contactController.text.trim(),
+          'plate_number': _plateController.text.trim(),
           'current_password': _currentPasswordController.text,
           'new_password': _newPasswordController.text.isNotEmpty ? _newPasswordController.text : null,
         }),
@@ -122,7 +124,7 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 10),
-                  Text("Profile updated successfully!"),
+                  Text("Driver profile updated successfully!"),
                 ],
               ),
               backgroundColor: nagcarlanGreen,
@@ -134,7 +136,7 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
       } else if (response.statusCode == 401) {
         _showError("Incorrect current password.");
       } else {
-        _showError("Update failed. Check your password.");
+        _showError("Update failed. Server returned ${response.statusCode}");
       }
     } catch (e) {
       _showError("Connection error.");
@@ -166,7 +168,7 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
     _middleNameController.dispose();
     _lastNameController.dispose();
     _contactController.dispose();
-    _emailController.dispose();
+    _plateController.dispose();
     _currentPasswordController.removeListener(_onPasswordFieldsChanged);
     _currentPasswordController.dispose();
     _newPasswordController.removeListener(_onPasswordFieldsChanged);
@@ -179,7 +181,7 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Edit Driver Profile', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: nagcarlanGreen,
         elevation: 0,
@@ -204,7 +206,7 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
                             children: [
                               Center(child: _buildAvatar()),
                               const SizedBox(height: 32),
-                              _buildSectionTitle("PERSONAL INFORMATION"),
+                              _buildSectionTitle("DRIVER INFORMATION"),
                               const SizedBox(height: 16),
                               _buildTextField(label: "First Name", controller: _firstNameController, icon: Icons.person_outline),
                               const SizedBox(height: 16),
@@ -213,6 +215,8 @@ class _PassengerEditProfileScreenState extends State<PassengerEditProfileScreen>
                               _buildTextField(label: "Last Name", controller: _lastNameController, icon: Icons.person_outline),
                               const SizedBox(height: 16),
                               _buildTextField(label: "Contact Number", controller: _contactController, icon: Icons.phone_android_outlined, keyboardType: TextInputType.phone),
+                              const SizedBox(height: 16),
+                              _buildTextField(label: "Plate Number", controller: _plateController, icon: Icons.directions_car_outlined),
                               
                               const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 24.0),
