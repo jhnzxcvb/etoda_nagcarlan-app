@@ -117,6 +117,19 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _handleGuestLogin() {
+    // Navigate to Passenger Dashboard as a Guest
+    Navigator.pushReplacementNamed(
+      context, 
+      '/passenger_home', 
+      arguments: {
+        'role': 'passenger',
+        'first_name': 'Guest',
+        'is_guest': true,
+      }
+    );
+  }
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -147,16 +160,16 @@ class _LoginScreenState extends State<LoginScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
                   // Logo / Icon Header
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withAlpha(200),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withAlpha(25),
                           blurRadius: 10,
                           spreadRadius: 2,
                         )
@@ -173,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Login to your account",
                     style: TextStyle(color: Colors.black54, fontSize: 16),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 40),
 
                   // Username Field
                   TextFormField(
@@ -223,6 +236,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: _handleLogin,
                     child: const Text("LOGIN", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // --- OR DIVIDER ---
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(thickness: 1, color: Colors.black12)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text("OR", style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+                      ),
+                      const Expanded(child: Divider(thickness: 1, color: Colors.black12)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Guest Login Button
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: nagcarlanGreen, width: 1.5),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    ),
+                    onPressed: _handleGuestLogin,
+                    icon: const Icon(Icons.person_outline, color: nagcarlanGreen),
+                    label: const Text(
+                      "CONTINUE AS GUEST", 
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: nagcarlanGreen)
+                    ),
                   ),
 
                   const SizedBox(height: 30),
