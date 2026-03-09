@@ -1,6 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:etoda_nagcarlan/main.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:etoda_nagcarlan/widgets/branding_footer.dart';
 
 class FareMatrixScreen extends StatefulWidget {
   const FareMatrixScreen({super.key});
@@ -10,144 +12,187 @@ class FareMatrixScreen extends StatefulWidget {
 }
 
 class _FareMatrixScreenState extends State<FareMatrixScreen> {
-  final List<String> locations = ["Select Location", "Poblacion", "Talangan", "Oobi", "Malinao"];
-  final List<String> passengerTypes = ["Normal", "Senior", "PWD", "Student"];
-  final List<String> tripTypes = ["Regular", "Special Trip"];
+  final MapController _mapController = MapController();
 
-  String fromLocation = "Select Location";
-  String toLocation = "Select Location";
+  // Nagcarlan Center Coordinates
+  static const LatLng _nagcarlanCenter = LatLng(14.1382, 121.4116);
+
+  final List<String> locations = [
+    "Abo", "Alibungbungan", "Alumbrado", "Balayong", "Balite", "Banago",
+    "Banca-banca", "Bangcuro", "Bukal", "Bunga", "Cabuyew", "Calumpang",
+    "Kanluran Kabubuhayan", "Silangan Kabubuhayan", "Labangan", "Lawaguin",
+    "Malaya", "Malinao", "Manaol", "Maravilla", "Nagcarlan Public Market",
+    "Oobi", "Palayan", "Palina", "Poblacion", "Sabang", "San Francisco",
+    "Santa Lucia", "Sibulan", "Sinipian", "Sulsuguin", "Talangan", "Tanza",
+    "Taytay", "Tipacan", "Yukos",
+  ]..sort();
+
+  final Map<String, String> locationToStation = {
+    "Poblacion": "Central Terminal",
+    "Nagcarlan Public Market": "Central Terminal",
+    "Sabang": "Central Terminal",
+    "Yukos": "Central Terminal",
+    "Talangan": "North Terminal",
+    "Malinao": "North Terminal",
+    "Oobi": "East Terminal",
+    "Alumbrado": "East Terminal",
+  };
+
+  // Real Station Data with Coordinates
+  final Map<String, LatLng> stationCoords = {
+    "Central Terminal": const LatLng(14.1382, 121.4116),
+    "North Terminal": const LatLng(14.1550, 121.4050),
+    "East Terminal": const LatLng(14.1320, 121.4300),
+  };
+
+  String? fromLocation;
+  String? toLocation;
   String passengerType = "Normal";
   String tripType = "Regular";
   String fare = "₱0.00";
 
+  List<Marker> _markers = [];
+
   @override
   void initState() {
     super.initState();
-    // Set initial values
-    fromLocation = locations.first;
-    toLocation = locations.first;
-    passengerType = passengerTypes.first;
-    tripType = tripTypes.first;
+    _updateMarkers();
+  }
+
+  void _updateMarkers() {
+    String? selectedStation = fromLocation != null ? locationToStation[fromLocation] : null;
+
+    setState(() {
+      _markers = stationCoords.entries.map((entry) {
+        bool isHighlighted = entry.key == selectedStation;
+        return Marker(
+          point: entry.value,
+          width: isHighlighted ? 60 : 40,
+          height: isHighlighted ? 60 : 40,
+          child: Icon(
+            Icons.location_on,
+            size: isHighlighted ? 50 : 35,
+            color: isHighlighted ? Colors.orange : nagcarlanGreen,
+          ),
+        );
+      }).toList();
+    });
+
+    if (selectedStation != null) {
+      _mapController.move(stationCoords[selectedStation]!, 15);
+    }
   }
 
   void _calculateFare() {
-    if (fromLocation == "Select Location" || toLocation == "Select Location") {
+    if (fromLocation == null || toLocation == null) {
       setState(() => fare = "₱0.00");
       return;
     }
-
     double baseFare = (tripType == "Special Trip") ? 50.0 : 30.0;
-    if (passengerType != "Normal") {
-      baseFare *= 0.80; // 20% discount
-    }
+    if (passengerType != "Normal") baseFare *= 0.80;
     setState(() => fare = "₱${baseFare.toStringAsFixed(2)}");
+    _updateMarkers();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Fare Calculator"),
-        backgroundColor: nagcarlanGreen,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text("Fare & Station Finder")),
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
         decoration: nagcarlanGradient,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Plan Your Trip",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: nagcarlanGreen,
-                ),
-              ),
-              Text(
-                "Select your route and passenger type to see the estimated fare.",
-                style: TextStyle(color: Colors.grey[700]),
-              ),
-              const SizedBox(height: 24),
-
               _buildSectionCard(
-                icon: Icons.map,
-                title: "Route",
+                icon: Icons.map_outlined,
+                title: "Station Map (Nagcarlan)",
                 children: [
-                  _buildDropdown("From", locations, fromLocation, (val) {
-                    setState(() => fromLocation = val!);_calculateFare();
+                  SizedBox(
+                    height: 250,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: const MapOptions(
+                          initialCenter: _nagcarlanCenter,
+                          initialZoom: 13,
+                          maxZoom: 18,
+                          minZoom: 12,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.etoda.nagcarlan',
+                          ),
+                          MarkerLayer(markers: _markers),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildSectionCard(
+                icon: Icons.search,
+                title: "Search Route",
+                children: [
+                  _buildSearchableDropdown("From", fromLocation, (val) {
+                    setState(() => fromLocation = val);
+                    _calculateFare();
                   }),
                   const SizedBox(height: 16),
-                  _buildDropdown("To", locations, toLocation, (val) {
-                    setState(() => toLocation = val!);_calculateFare();
+                  _buildSearchableDropdown("To", toLocation, (val) {
+                    setState(() => toLocation = val);
+                    _calculateFare();
                   }),
                 ],
               ),
               const SizedBox(height: 20),
-
-              _buildSectionCard(
-                icon: Icons.person_outline,
-                title: "Details",
-                children: [
-                  _buildDropdown("Passenger Type", passengerTypes, passengerType, (val) {
-                    setState(() => passengerType = val!);_calculateFare();
-                  }),
-                  const SizedBox(height: 16),
-                  _buildDropdown("Trip Type", tripTypes, tripType, (val) {
-                    setState(() => tripType = val!);_calculateFare();
-                  }),
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // Total Fare Display
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: nagcarlanGreen,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    )
-                  ]
-                ),
-                child: Column(
-                  children: [
-                    Text("ESTIMATED FARE", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, letterSpacing: 1)),
-                    const SizedBox(height: 8),
-                    Text(
-                      fare,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (passengerType != "Normal") ...[
-                        const SizedBox(height: 8),
-                        Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                                color: nagcarlanGold.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(8)
-                            ),
-                            child: const Text("20% Discount Applied", style: TextStyle(color: nagcarlanGreen, fontWeight: FontWeight.bold, fontSize: 12))
-                        )
-                    ]
-                  ],
-                ),
-              ),
+              _buildFareDisplay(),
+              const SizedBox(height: 20),
+              const BrandingFooter(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchableDropdown(String label, String? selectedValue, ValueChanged<String?> onChanged) {
+    return Autocomplete<String>(
+      optionsBuilder: (v) => v.text == '' ? locations : locations.where((o) => o.toLowerCase().contains(v.text.toLowerCase())),
+      onSelected: onChanged,
+      fieldViewBuilder: (ctx, ctrl, node, onSubmit) {
+        if (selectedValue != null && ctrl.text == "") ctrl.text = selectedValue;
+        return TextFormField(
+          controller: ctrl,
+          focusNode: node,
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: const Icon(Icons.location_on, color: nagcarlanGreen),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.white.withAlpha(230),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFareDisplay() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: nagcarlanGreen,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          const Text("ESTIMATED FARE", style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(fare, style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
@@ -158,34 +203,11 @@ class _FareMatrixScreenState extends State<FareMatrixScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: nagcarlanGreen),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: nagcarlanGreen)),
-              ],
-            ),
-            const Divider(height: 24),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown(String label, List<String> items, String selectedValue, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      value: selectedValue,
-      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-        fillColor: Colors.grey[50],
+        child: Column(children: [
+          Row(children: [Icon(icon, color: nagcarlanGreen), const SizedBox(width: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.bold))]),
+          const Divider(height: 24),
+          ...children
+        ]),
       ),
     );
   }
